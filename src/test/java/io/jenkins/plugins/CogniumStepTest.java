@@ -93,7 +93,10 @@ class CogniumStepTest {
     void pipelineRejectsSymlinkThatEscapesTheWorkspace() throws Exception {
         assumeFalse(FakeCogniumEnvironment.isWindowsAgent(), "uses ln -s");
         WorkflowRun run = runPipeline(
-                true, false, null, "sh 'mkdir -p ../cognium-outside && ln -s ../cognium-outside escape'\n"
+                true,
+                false,
+                null,
+                "sh 'mkdir -p ../cognium-outside && ln -s ../cognium-outside escape'\n"
                         + "    cognium(path: 'escape')");
         j.assertBuildStatus(Result.FAILURE, run);
         j.assertLogContains("symbolic link that leaves the Jenkins workspace", run);
@@ -104,7 +107,10 @@ class CogniumStepTest {
     void pipelineRejectsReportThroughSymlinkThatEscapesTheWorkspace() throws Exception {
         assumeFalse(FakeCogniumEnvironment.isWindowsAgent(), "uses ln -s");
         WorkflowRun run = runPipeline(
-                true, false, null, "sh 'mkdir -p ../cognium-outside && ln -s ../cognium-outside reports'\n"
+                true,
+                false,
+                null,
+                "sh 'mkdir -p ../cognium-outside && ln -s ../cognium-outside reports'\n"
                         + "    cognium(output: 'reports/out.sarif')");
         j.assertBuildStatus(Result.FAILURE, run);
         j.assertLogContains("symbolic link that leaves the Jenkins workspace", run);

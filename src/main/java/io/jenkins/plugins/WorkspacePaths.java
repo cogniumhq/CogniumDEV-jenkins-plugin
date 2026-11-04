@@ -49,7 +49,8 @@ final class WorkspacePaths {
             current = current.resolve(name);
             if (Files.isSymbolicLink(current)) {
                 if (!Files.exists(current)) {
-                    throw new IOException("Cognium " + field + " goes through a dangling symbolic link: " + relativePath);
+                    throw new IOException(
+                            "Cognium " + field + " goes through a dangling symbolic link: " + relativePath);
                 }
                 Path target = current.toRealPath();
                 if (!target.startsWith(root)) {

@@ -44,7 +44,8 @@ class WorkspacePathsTest {
                 assertThrows(IOException.class, () -> WorkspacePaths.confine(workspace, "../outside", "scan path"));
         assertTrue(error.getMessage().contains("outside the Jenkins workspace"), error.getMessage());
         assertThrows(
-                IOException.class, () -> WorkspacePaths.confine(workspace, "src/../../outside/r.sarif", "report output"));
+                IOException.class,
+                () -> WorkspacePaths.confine(workspace, "src/../../outside/r.sarif", "report output"));
     }
 
     @Test
@@ -84,7 +85,8 @@ class WorkspacePathsTest {
     void acceptsSymlinkThatStaysInsideTheWorkspace() throws IOException {
         symlink(workspace.resolve("code"), workspace.resolve("src"));
         assertEquals(
-                workspace.toRealPath().resolve("code/main"), WorkspacePaths.confine(workspace, "code/main", "scan path"));
+                workspace.toRealPath().resolve("code/main"),
+                WorkspacePaths.confine(workspace, "code/main", "scan path"));
     }
 
     @Test
