@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.sf.json.JSONException;
+import net.sf.json.JSONObject;
 
 /**
  * Builds argument lists for a local, prefix-scoped {@code cognium-dev} install and scan.
@@ -26,10 +28,11 @@ public final class CogniumCli {
     public static final String PACKAGE_NAME = "cognium-dev";
 
     /**
-     * Default npm dist-tag. {@code latest} always installs the current published {@code cognium-dev}
-     * release. Pipelines can pin a concrete version when they need a reproducible scanner.
+     * Default {@code cognium-dev} version: an exact release, so a build never installs whatever was
+     * published last. Bump it deliberately in a plugin release. Pipelines can set {@code packageVersion}
+     * to another exact version, or to a dist-tag such as {@code latest} to opt in to following npm.
      */
-    public static final String DEFAULT_PACKAGE_VERSION = "latest";
+    public static final String DEFAULT_PACKAGE_VERSION = "4.17.0";
 
     public static final String DEFAULT_PATH = ".";
     public static final String DEFAULT_FORMAT = "text";
@@ -45,6 +48,9 @@ public final class CogniumCli {
     private static final Pattern NODE_VERSION = Pattern.compile("^v?(\\d+)\\.(\\d+)\\.(\\d+)(?:[-+].*)?$");
 
     private static final Pattern SAFE_NPM_VERSION = Pattern.compile("^[A-Za-z0-9][A-Za-z0-9._+-]*$");
+    private static final Pattern EXACT_VERSION =
+            Pattern.compile("^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$");
+
     private static final Pattern SAFE_CLI_VALUE = Pattern.compile("^[A-Za-z0-9._,+-]+$");
 
     private CogniumCli() {}
@@ -79,6 +85,9 @@ public final class CogniumCli {
         command.add("--prefix");
         command.add(installDirRemote);
         command.add("--no-save");
+        // cognium-dev and its dependencies (circle-ir, web-tree-sitter, yaml,
+        // @cognium/project-profile-detect) declare no install-time scripts, so none are run.
+        command.add("--ignore-scripts");
         command.add(PACKAGE_NAME + "@" + requireSafeNpmVersion(packageVersion));
         return command;
     }
@@ -201,6 +210,47 @@ public final class CogniumCli {
             throw new IllegalArgumentException("packageVersion must be an npm version or tag, not a package name");
         }
         return trimmed;
+    }
+
+    /** True when {@code packageVersion} names one release (for example {@code 4.17.0}), not a tag or range. */
+    static boolean isExactVersion(String packageVersion) {
+        return packageVersion != null
+                && EXACT_VERSION.matcher(packageVersion.trim()).matches();
+    }
+
+    /**
+     * Reads {@code version} from the installed {@code node_modules/cognium-dev/package.json}.
+     *
+     * @throws IllegalArgumentException when the manifest is not JSON or has no version
+     */
+    static String installedVersion(String packageJson) {
+        String version = null;
+        try {
+            JSONObject manifest = JSONObject.fromObject(packageJson);
+            if (PACKAGE_NAME.equals(manifest.optString("name", null))) {
+                version = Util.fixEmptyAndTrim(manifest.optString("version", null));
+            }
+        } catch (JSONException e) {
+            throw new IllegalArgumentException("The installed " + PACKAGE_NAME + " package.json is not valid JSON.", e);
+        }
+        if (version == null) {
+            throw new IllegalArgumentException(
+                    "The installed package.json does not name " + PACKAGE_NAME + " with a version.");
+        }
+        return version;
+    }
+
+    /**
+     * Checks that npm installed the requested release. An exact {@code requested} version must match
+     * {@code installed}; a tag or range cannot be checked and is accepted.
+     *
+     * @throws IllegalArgumentException when an exact version was requested and another was installed
+     */
+    static void requireInstalledVersion(String requested, String installed) {
+        if (isExactVersion(requested) && !requested.trim().equals(installed)) {
+            throw new IllegalArgumentException(
+                    "npm installed " + PACKAGE_NAME + "@" + installed + " but " + requested.trim() + " was requested.");
+        }
     }
 
     static boolean isSupportedNodeVersion(String version) {

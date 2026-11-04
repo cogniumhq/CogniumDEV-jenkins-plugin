@@ -1,5 +1,6 @@
 <div>
-    npm version or dist-tag of <code>cognium-dev</code> to install. Defaults to <code>latest</code>, so each scan
-    uses the current package on npm. Pin a concrete version (for example <code>4.14.2</code>) when the scanner
-    version must stay fixed.
+    Exact version of <code>cognium-dev</code> to install. Defaults to <code>4.17.0</code>. The step installs it
+    with npm install scripts disabled (<code>--ignore-scripts</code>) and fails if npm installed a different
+    version. A dist-tag such as <code>latest</code> is accepted with a warning: it installs and runs whatever is
+    currently published on npm, on every build.
 </div>

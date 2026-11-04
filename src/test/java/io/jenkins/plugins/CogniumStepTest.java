@@ -45,7 +45,7 @@ class CogniumStepTest {
     void defaultsMatchDocumentedValues() {
         CogniumStep step = new CogniumStep();
         assertEquals(".", step.getPath());
-        assertEquals("latest", step.getPackageVersion());
+        assertEquals(CogniumCli.DEFAULT_PACKAGE_VERSION, step.getPackageVersion());
         assertEquals("text", step.getFormat());
         assertNull(step.getOutput());
         assertNull(step.getSeverity());
@@ -60,7 +60,7 @@ class CogniumStepTest {
         step.setPackageVersion("");
         step.setFormat(" ");
         assertEquals(".", step.getPath());
-        assertEquals("latest", step.getPackageVersion());
+        assertEquals(CogniumCli.DEFAULT_PACKAGE_VERSION, step.getPackageVersion());
         assertEquals("text", step.getFormat());
     }
 
@@ -69,7 +69,37 @@ class CogniumStepTest {
         CogniumStep.DescriptorImpl descriptor = j.jenkins.getDescriptorByType(CogniumStep.DescriptorImpl.class);
         FormValidation validation = descriptor.doCheckPackageVersion("1.0.0; rm -rf /");
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
-        assertEquals(FormValidation.Kind.OK, descriptor.doCheckPackageVersion("latest").kind);
+        assertEquals(FormValidation.Kind.OK, descriptor.doCheckPackageVersion("4.17.0").kind);
+        assertEquals(FormValidation.Kind.WARNING, descriptor.doCheckPackageVersion("latest").kind);
+    }
+
+    @Test
+    void installDisablesScriptsAndVerifiesThePinnedVersion() throws Exception {
+        WorkflowRun run = runPipeline(true, false, null, "cognium()");
+        j.assertBuildStatusSuccess(run);
+        j.assertLogContains("--ignore-scripts", run);
+        j.assertLogContains("cognium-dev@" + CogniumCli.DEFAULT_PACKAGE_VERSION, run);
+        j.assertLogContains("[Cognium] Installed cognium-dev@" + CogniumCli.DEFAULT_PACKAGE_VERSION + ".", run);
+        j.assertLogNotContains("is not an exact version", run);
+    }
+
+    @Test
+    void installedVersionMismatchFailsTheBuild() throws Exception {
+        WorkflowRun run =
+                runPipeline(true, false, "'COGNIUM_TEST_INSTALLED_VERSION=9.9.9'", "cognium(packageVersion: '4.17.0')");
+        j.assertBuildStatus(Result.FAILURE, run);
+        j.assertLogContains("npm installed cognium-dev@9.9.9 but 4.17.0 was requested", run);
+        j.assertLogNotContains("[fake-cognium-dev]", run);
+        assertNoInstallLeftovers();
+    }
+
+    @Test
+    void distTagIsAllowedWithAWarning() throws Exception {
+        WorkflowRun run = runPipeline(
+                true, false, "'COGNIUM_TEST_INSTALLED_VERSION=4.19.0'", "cognium(packageVersion: 'latest')");
+        j.assertBuildStatusSuccess(run);
+        j.assertLogContains("[Cognium] Installed cognium-dev@4.19.0.", run);
+        j.assertLogContains("packageVersion=latest is not an exact version", run);
     }
 
     @Test

@@ -112,6 +112,7 @@ final class FakeCogniumEnvironment {
     private static String unixNpm() {
         return "#!/bin/sh\n"
                 + "set -eu\n"
+                + "echo \"[fake-npm] args: $*\"\n"
                 + "echo \"[fake-npm] WORKSPACE=${WORKSPACE:-<unset>}\"\n"
                 + "echo \"[fake-npm] PWD=$PWD\"\n"
                 + "if [ \"${COGNIUM_TEST_NPM_FAIL:-}\" = \"1\" ]; then\n"
@@ -119,7 +120,9 @@ final class FakeCogniumEnvironment {
                 + "  exit 1\n"
                 + "fi\n"
                 + "prefix=\"\"\n"
+                + "spec=\"\"\n"
                 + "while [ \"$#\" -gt 0 ]; do\n"
+                + "  case \"$1\" in cognium-dev@*) spec=\"${1#cognium-dev@}\" ;; esac\n"
                 + "  if [ \"$1\" = \"--prefix\" ]; then\n"
                 + "    prefix=\"$2\"\n"
                 + "    shift 2\n"
@@ -139,6 +142,10 @@ final class FakeCogniumEnvironment {
                 + "/bin/cp \"$src/cognium-dev-template\" \"$prefix/node_modules/.bin/cognium-dev\"\n"
                 + "/bin/chmod +x \"$prefix/node_modules/.bin/cognium-dev\"\n"
                 + "test -x \"$prefix/node_modules/.bin/cognium-dev\"\n"
+                + "version=\"${COGNIUM_TEST_INSTALLED_VERSION:-$spec}\"\n"
+                + "/bin/mkdir -p \"$prefix/node_modules/cognium-dev\"\n"
+                + "printf '{\"name\":\"cognium-dev\",\"version\":\"%s\"}\\n' \"$version\""
+                + " > \"$prefix/node_modules/cognium-dev/package.json\"\n"
                 + "echo \"[fake-npm] installed into $prefix\"\n";
     }
 
@@ -149,9 +156,13 @@ final class FakeCogniumEnvironment {
                 + "  echo [fake-npm] failing install 1>&2\r\n"
                 + "  exit /b 1\r\n"
                 + ")\r\n"
+                + "echo [fake-npm] args: %*\r\n"
                 + "set \"PREFIX=\"\r\n"
+                + "set \"SPEC=\"\r\n"
                 + ":parse\r\n"
                 + "if \"%~1\"==\"\" goto done\r\n"
+                + "set \"ARG=%~1\"\r\n"
+                + "if \"%ARG:~0,12%\"==\"cognium-dev@\" set \"SPEC=%ARG:~12%\"\r\n"
                 + "if /I \"%~1\"==\"--prefix\" (\r\n"
                 + "  set \"PREFIX=%~2\"\r\n"
                 + "  shift\r\n"
@@ -174,6 +185,10 @@ final class FakeCogniumEnvironment {
                 + "if errorlevel 1 exit /b 1\r\n"
                 + "if not exist \"%PREFIX%\\node_modules\\.bin\\cognium-dev.cmd\" "
                 + "exit /b 1\r\n"
+                + "if defined COGNIUM_TEST_INSTALLED_VERSION set \"SPEC=%COGNIUM_TEST_INSTALLED_VERSION%\"\r\n"
+                + "mkdir \"%PREFIX%\\node_modules\\cognium-dev\"\r\n"
+                + ">\"%PREFIX%\\node_modules\\cognium-dev\\package.json\" "
+                + "echo {\"name\":\"cognium-dev\",\"version\":\"%SPEC%\"}\r\n"
                 + "echo [fake-npm] installed into %PREFIX%\r\n"
                 + "exit /b 0\r\n";
     }
