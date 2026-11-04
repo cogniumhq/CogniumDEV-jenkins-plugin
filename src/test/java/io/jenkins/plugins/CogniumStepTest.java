@@ -85,8 +85,8 @@ class CogniumStepTest {
 
     @Test
     void installedVersionMismatchFailsTheBuild() throws Exception {
-        WorkflowRun run = runPipeline(
-                true, false, "'COGNIUM_TEST_INSTALLED_VERSION=9.9.9'", "cognium(packageVersion: '4.17.0')");
+        WorkflowRun run =
+                runPipeline(true, false, "'COGNIUM_TEST_INSTALLED_VERSION=9.9.9'", "cognium(packageVersion: '4.17.0')");
         j.assertBuildStatus(Result.FAILURE, run);
         j.assertLogContains("npm installed cognium-dev@9.9.9 but 4.17.0 was requested", run);
         j.assertLogNotContains("[fake-cognium-dev]", run);

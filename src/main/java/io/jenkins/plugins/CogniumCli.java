@@ -214,7 +214,8 @@ public final class CogniumCli {
 
     /** True when {@code packageVersion} names one release (for example {@code 4.17.0}), not a tag or range. */
     static boolean isExactVersion(String packageVersion) {
-        return packageVersion != null && EXACT_VERSION.matcher(packageVersion.trim()).matches();
+        return packageVersion != null
+                && EXACT_VERSION.matcher(packageVersion.trim()).matches();
     }
 
     /**
@@ -247,8 +248,8 @@ public final class CogniumCli {
      */
     static void requireInstalledVersion(String requested, String installed) {
         if (isExactVersion(requested) && !requested.trim().equals(installed)) {
-            throw new IllegalArgumentException("npm installed " + PACKAGE_NAME + "@" + installed + " but "
-                    + requested.trim() + " was requested.");
+            throw new IllegalArgumentException(
+                    "npm installed " + PACKAGE_NAME + "@" + installed + " but " + requested.trim() + " was requested.");
         }
     }
 

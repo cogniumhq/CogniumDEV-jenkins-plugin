@@ -235,8 +235,10 @@ public class CogniumStepExecution extends SynchronousNonBlockingStepExecution<Vo
 
     private void verifyInstalledVersion(FilePath tempDirectory, TaskListener listener)
             throws IOException, InterruptedException {
-        FilePath manifest =
-                tempDirectory.child("node_modules").child(CogniumCli.PACKAGE_NAME).child("package.json");
+        FilePath manifest = tempDirectory
+                .child("node_modules")
+                .child(CogniumCli.PACKAGE_NAME)
+                .child("package.json");
         if (!manifest.exists()) {
             throw new AbortException(
                     "cognium-dev was installed but its package.json was not found at " + manifest.getRemote() + ".");
