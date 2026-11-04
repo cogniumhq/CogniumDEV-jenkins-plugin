@@ -130,4 +130,29 @@ class CogniumCliTest {
         assertFalse(CogniumCli.isSupportedNodeVersion("node"));
         assertFalse(CogniumCli.isSupportedNodeVersion("20"));
     }
+
+    @Test
+    void rejectsWindowsAbsoluteAndTraversalPaths() {
+        assertThrows(IllegalArgumentException.class, () -> CogniumCli.defaultedPath("C:\\outside"));
+
+        assertThrows(IllegalArgumentException.class, () -> CogniumCli.defaultedPath("\\\\server\\share\\outside"));
+
+        assertThrows(IllegalArgumentException.class, () -> CogniumCli.defaultedPath("..\\outside"));
+
+        assertThrows(IllegalArgumentException.class, () -> CogniumCli.defaultedPath("foo\\..\\outside"));
+
+        assertThrows(IllegalArgumentException.class, () -> CogniumCli.defaultedPath("-rf"));
+    }
+
+    @Test
+    void rejectsWindowsAbsoluteAndTraversalOutputs() {
+        assertThrows(IllegalArgumentException.class, () -> CogniumCli.optionalOutput("C:\\outside\\report.sarif"));
+
+        assertThrows(IllegalArgumentException.class, () -> CogniumCli.optionalOutput("..\\outside\\report.sarif"));
+
+        assertThrows(
+                IllegalArgumentException.class, () -> CogniumCli.optionalOutput("\\\\server\\share\\report.sarif"));
+
+        assertThrows(IllegalArgumentException.class, () -> CogniumCli.optionalOutput("-output"));
+    }
 }

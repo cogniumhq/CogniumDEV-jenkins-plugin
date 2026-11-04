@@ -120,9 +120,51 @@ public final class CogniumCli {
         return args;
     }
 
+    static String validateWorkspaceRelativePath(String value, String fieldName) {
+        String trimmed = Util.fixEmptyAndTrim(value);
+
+        if (trimmed == null) {
+            return null;
+        }
+
+        // Reject paths beginning with CLI options.
+        if (trimmed.startsWith("-")) {
+            throw new IllegalArgumentException("Invalid Cognium " + fieldName + ": paths must not start with '-'.");
+        }
+
+        // Reject control characters.
+        for (int i = 0; i < trimmed.length(); i++) {
+            if (Character.isISOControl(trimmed.charAt(i))) {
+                throw new IllegalArgumentException(
+                        "Invalid Cognium " + fieldName + ": control characters are not allowed.");
+            }
+        }
+
+        // Reject Unix absolute paths, Windows rooted paths and UNC paths.
+        if (trimmed.startsWith("/") || trimmed.startsWith("\\") || trimmed.matches("^[A-Za-z]:.*")) {
+            throw new IllegalArgumentException("Invalid Cognium " + fieldName + ": absolute paths are not allowed.");
+        }
+
+        // Reject Windows alternate data streams and drive syntax.
+        if (trimmed.contains(":")) {
+            throw new IllegalArgumentException("Invalid Cognium " + fieldName + ": ':' is not allowed.");
+        }
+
+        // Check both separator styles on every operating system.
+        String[] segments = trimmed.split("[/\\\\]", -1);
+
+        for (String segment : segments) {
+            if ("..".equals(segment)) {
+                throw new IllegalArgumentException("Invalid Cognium " + fieldName + ": '..' traversal is not allowed.");
+            }
+        }
+
+        return trimmed;
+    }
+
     static String defaultedPath(String path) {
-        String trimmed = Util.fixEmptyAndTrim(path);
-        return trimmed == null ? DEFAULT_PATH : trimmed;
+        String validated = validateWorkspaceRelativePath(path, "path");
+        return validated == null ? DEFAULT_PATH : validated;
     }
 
     static String defaultedFormat(String format) {
@@ -147,16 +189,7 @@ public final class CogniumCli {
     }
 
     static String optionalOutput(String output) {
-        String trimmed = Util.fixEmptyAndTrim(output);
-        if (trimmed == null) {
-            return null;
-        }
-        for (int i = 0; i < trimmed.length(); i++) {
-            if (trimmed.charAt(i) < 32) {
-                throw new IllegalArgumentException("Invalid Cognium output path");
-            }
-        }
-        return trimmed;
+        return validateWorkspaceRelativePath(output, "output");
     }
 
     static String requireSafeNpmVersion(String packageVersion) {

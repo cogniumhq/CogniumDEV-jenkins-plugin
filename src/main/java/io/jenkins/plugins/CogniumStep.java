@@ -149,6 +149,15 @@ public class CogniumStep extends Step {
             return validateOptionalToken(category, "category");
         }
 
+        public FormValidation doCheckPath(@QueryParameter String path) {
+            try {
+                CogniumCli.defaultedPath(path);
+                return FormValidation.ok();
+            } catch (IllegalArgumentException e) {
+                return FormValidation.error(e.getMessage());
+            }
+        }
+
         public FormValidation doCheckOutput(@QueryParameter String output) {
             try {
                 CogniumCli.optionalOutput(output);

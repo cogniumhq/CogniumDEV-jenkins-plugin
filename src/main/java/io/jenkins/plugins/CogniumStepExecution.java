@@ -5,11 +5,15 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.TaskListener;
+import hudson.remoting.VirtualChannel;
 import hudson.util.ArgumentListBuilder;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.List;
+import jenkins.MasterToSlaveFileCallable;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 
@@ -57,6 +61,7 @@ public class CogniumStepExecution extends SynchronousNonBlockingStepExecution<Vo
         }
 
         ensureWorkspace(workspace);
+        validatePathsInWorkspace(workspace);
 
         FilePath tempDirectory = null;
         try {
@@ -87,6 +92,42 @@ public class CogniumStepExecution extends SynchronousNonBlockingStepExecution<Vo
         if (!workspace.exists()) {
             throw new AbortException("Cognium could not create workspace directory: " + workspace.getRemote());
         }
+    }
+
+    private void validatePathsInWorkspace(FilePath workspace) throws IOException, InterruptedException {
+
+        String scanPath = CogniumCli.defaultedPath(path);
+        String outputPath = CogniumCli.optionalOutput(output);
+
+        workspace.act(new MasterToSlaveFileCallable<Void>() {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Void invoke(File workspaceRoot, VirtualChannel channel) throws IOException {
+
+                Path root = workspaceRoot.getCanonicalFile().toPath();
+
+                validatePath(root, scanPath, "scan path");
+
+                if (outputPath != null) {
+                    validatePath(root, outputPath, "report output");
+                }
+
+                return null;
+            }
+
+            private void validatePath(Path root, String relativePath, String field) throws IOException {
+
+                File candidate = new File(root.toFile(), relativePath);
+                Path resolved = candidate.getCanonicalFile().toPath();
+
+                if (!resolved.startsWith(root)) {
+                    throw new IOException(
+                            "Cognium " + field + " resolves outside the Jenkins workspace: " + relativePath);
+                }
+            }
+        });
     }
 
     private static FilePath createInstallDirectory(FilePath workspace) throws IOException, InterruptedException {
