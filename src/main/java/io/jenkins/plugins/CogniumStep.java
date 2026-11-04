@@ -125,12 +125,22 @@ public class CogniumStep extends Step {
             return Set.of(FilePath.class, Launcher.class, TaskListener.class, hudson.EnvVars.class);
         }
 
+        /** The exact {@code cognium-dev} version installed when {@code packageVersion} is not set. */
+        public String getDefaultPackageVersion() {
+            return CogniumCli.DEFAULT_PACKAGE_VERSION;
+        }
+
         public FormValidation doCheckPackageVersion(@QueryParameter String packageVersion) {
             if (Util.fixEmptyAndTrim(packageVersion) == null) {
                 return FormValidation.ok();
             }
             try {
                 CogniumCli.requireSafeNpmVersion(packageVersion);
+                if (!CogniumCli.isExactVersion(packageVersion)) {
+                    return FormValidation.warning("Not an exact version: each build installs whatever npm resolves "
+                            + "this to, including a new release. Use an exact version such as "
+                            + CogniumCli.DEFAULT_PACKAGE_VERSION + " for a reproducible scanner.");
+                }
                 return FormValidation.ok();
             } catch (IllegalArgumentException e) {
                 return FormValidation.error(e.getMessage());

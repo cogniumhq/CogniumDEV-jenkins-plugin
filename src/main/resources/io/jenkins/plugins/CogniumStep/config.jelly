@@ -4,7 +4,7 @@
         <f:textbox default="."/>
     </f:entry>
     <f:entry title="${%Package version}" field="packageVersion">
-        <f:textbox default="latest"/>
+        <f:textbox default="${descriptor.defaultPackageVersion}"/>
     </f:entry>
     <f:entry title="${%Format}" field="format">
         <f:textbox default="text"/>

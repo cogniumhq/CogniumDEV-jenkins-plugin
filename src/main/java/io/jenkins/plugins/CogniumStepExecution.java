@@ -202,7 +202,7 @@ public class CogniumStepExecution extends SynchronousNonBlockingStepExecution<Vo
             throws IOException, InterruptedException {
         listener.getLogger()
                 .println("[Cognium] Installing " + CogniumCli.PACKAGE_NAME + "@" + packageVersion
-                        + " into a temporary directory (not the global npm prefix)...");
+                        + " into a temporary directory (not the global npm prefix, install scripts disabled)...");
 
         int exitCode;
         try {
@@ -228,6 +228,32 @@ public class CogniumStepExecution extends SynchronousNonBlockingStepExecution<Vo
         if (!executable.exists()) {
             throw new AbortException(
                     "cognium-dev was installed but the executable was not found at " + executable.getRemote() + ".");
+        }
+
+        verifyInstalledVersion(tempDirectory, listener);
+    }
+
+    private void verifyInstalledVersion(FilePath tempDirectory, TaskListener listener)
+            throws IOException, InterruptedException {
+        FilePath manifest =
+                tempDirectory.child("node_modules").child(CogniumCli.PACKAGE_NAME).child("package.json");
+        if (!manifest.exists()) {
+            throw new AbortException(
+                    "cognium-dev was installed but its package.json was not found at " + manifest.getRemote() + ".");
+        }
+        String installed;
+        try {
+            installed = CogniumCli.installedVersion(manifest.readToString());
+            CogniumCli.requireInstalledVersion(packageVersion, installed);
+        } catch (IllegalArgumentException e) {
+            throw new AbortException(e.getMessage());
+        }
+        listener.getLogger().println("[Cognium] Installed " + CogniumCli.PACKAGE_NAME + "@" + installed + ".");
+        if (!CogniumCli.isExactVersion(packageVersion)) {
+            listener.getLogger()
+                    .println("[Cognium] Warning: packageVersion=" + packageVersion
+                            + " is not an exact version, so each build installs whatever npm resolves it to."
+                            + " Pin an exact version for a reproducible scanner.");
         }
     }
 

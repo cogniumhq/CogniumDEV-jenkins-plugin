@@ -2,7 +2,7 @@
 
 Jenkins Pipeline plugin that runs [Cognium](https://cognium.dev) static application security testing against the workspace.
 
-Cognium is a SAST tool for finding security issues in source code, including AI-written code. This plugin installs `cognium-dev` into a temporary directory on the Jenkins **agent** (not globally) and runs `cognium-dev scan`.
+Cognium is a SAST tool for finding security issues in source code, including AI-written code. This plugin installs a pinned `cognium-dev` release into a temporary directory on the Jenkins **agent** (not globally, with npm install scripts disabled) and runs `cognium-dev scan`.
 
 This plugin is **not** published to the Jenkins update center yet.
 
@@ -17,6 +17,7 @@ pipeline {
             steps {
                 cognium(
                     path: '.',
+                    packageVersion: '4.17.0',
                     format: 'text',
                     failOnFindings: false
                 )
@@ -33,28 +34,28 @@ By default, security findings are logged and the build continues. To fail the st
 ```groovy
 cognium(
     path: '.',
+    packageVersion: '4.17.0',
     failOnFindings: true
 )
 ```
 
-### Pin a scanner version
+### Scanner version and install scripts
 
-By default the plugin installs `cognium-dev@latest` from npm, so new CLI releases are picked up automatically. Pin a version when a pipeline must stay on one scanner:
+The plugin installs an exact `cognium-dev` release, never whatever npm published last:
 
-```groovy
-cognium(
-    path: '.',
-    packageVersion: '4.14.2',
-    failOnFindings: true
-)
-```
+- **Default:** `4.17.0` (`CogniumCli.DEFAULT_PACKAGE_VERSION`). A plugin release changes it deliberately.
+- **Configurable:** set `packageVersion` to another exact version, for example `packageVersion: '4.18.1'`.
+- **Verified:** after the install the step reads `node_modules/cognium-dev/package.json` and fails if an exact `packageVersion` does not match the installed version.
+- **No install scripts:** npm runs with `--ignore-scripts`, so no `preinstall`, `install` or `postinstall` script of `cognium-dev` or its dependencies executes on the agent. `cognium-dev` and its dependencies (`circle-ir`, `web-tree-sitter`, `yaml`, `@cognium/project-profile-detect`) declare no install-time scripts and do not need any. If a future release needs one, that release has to be documented here before the plugin default moves to it.
+
+A dist-tag or range (`latest`, `4.x`) is still accepted, with a warning in the log and in the form check. It installs and then runs the current npm release on every build, so a new release reaches your agents without review. Use it only if that is what you want.
 
 ## Parameters
 
 | Parameter        | Default  | Description                                                                                                                                                  |
 | ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `path`           | `.`      | Path passed to `cognium-dev scan` (relative to the workspace).                                                                                               |
-| `packageVersion` | `latest` | npm version or dist-tag of `cognium-dev`. `latest` always installs the current npm release. Pin a version (for example `4.14.2`) for a reproducible scanner. |
+| `packageVersion` | `4.17.0` | Exact `cognium-dev` version to install (checked after install). A dist-tag such as `latest` installs the current npm release on every build and logs a warning. |
 | `format`         | `text`   | `--format` (`text`, `json`, or `sarif`).                                                                                                                     |
 | `output`         | unset    | Optional `--output` report path.                                                                                                                             |
 | `severity`       | unset    | Optional `--severity` filter (for example `high` or `critical,high`).                                                                                        |
@@ -90,9 +91,10 @@ The plugin does not use Jenkins credentials. Source is scanned on the agent; thi
 
 1. The `cognium` step runs on the agent that owns the workspace.
 2. It checks that Node.js is on `PATH`.
-3. It installs `cognium-dev@<packageVersion>` into a temporary directory with `npm install --prefix` (not a global install). The default tag is `latest`.
-4. It runs `cognium-dev scan <path> --format ...` from that install (Windows uses `npm.cmd` / `cognium-dev.cmd`).
-5. It deletes the temporary directory even when the scan fails.
+3. It installs `cognium-dev@<packageVersion>` into a temporary directory with `npm install --prefix <dir> --no-save --ignore-scripts` (not a global install, no install scripts). The default is the exact version `4.17.0`.
+4. It reads the installed `package.json` and fails if an exact `packageVersion` was not what npm installed.
+5. It runs `cognium-dev scan <path> --format ...` from that install (Windows uses `npm.cmd` / `cognium-dev.cmd`).
+6. It deletes the temporary directory even when the scan fails.
 
 ## Development
 
@@ -115,7 +117,7 @@ mvn hpi:run
 
 ### Tests
 
-Tests do **not** download `cognium-dev` from npm. They put fake `node` / `npm` executables on `PATH` and a fake `cognium-dev` that honors `COGNIUM_TEST_EXIT_CODE`.
+Tests do **not** download `cognium-dev` from npm. They put fake `node` / `npm` executables on `PATH` and a fake `cognium-dev` that honors `COGNIUM_TEST_EXIT_CODE`. The fake npm writes `node_modules/cognium-dev/package.json` with the requested version, or with `COGNIUM_TEST_INSTALLED_VERSION` to test a mismatch.
 
 Covered behavior includes descriptor registration, defaults, Pipeline invocation, install failure, successful scan, findings with and without `failOnFindings`, operational errors, temporary directory cleanup, and Windows vs Unix command selection.
 
