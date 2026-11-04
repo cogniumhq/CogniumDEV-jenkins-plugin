@@ -55,7 +55,7 @@ cognium(
 | ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `path`           | `.`      | Path passed to `cognium-dev scan` (relative to the workspace).                                                                                               |
 | `packageVersion` | `latest` | npm version or dist-tag of `cognium-dev`. `latest` always installs the current npm release. Pin a version (for example `4.14.2`) for a reproducible scanner. |
-| `format`         | `text`   | `--format` (`text`, `json`, or `sarif`).                                                                                                                     |
+| `format`         | `text`   | `--format`: `text`, `json`, or `sarif`. Any other value fails the step.                                                                                      |
 | `output`         | unset    | Optional `--output` report path.                                                                                                                             |
 | `severity`       | unset    | Optional `--severity` filter (for example `high` or `critical,high`).                                                                                        |
 | `category`       | unset    | Optional `--category` filter (for example `security`).                                                                                                       |

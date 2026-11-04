@@ -34,6 +34,9 @@ public final class CogniumCli {
     public static final String DEFAULT_PATH = ".";
     public static final String DEFAULT_FORMAT = "text";
 
+    /** Report formats {@code cognium-dev scan --format} accepts. */
+    public static final List<String> SUPPORTED_FORMATS = List.of("text", "json", "sarif");
+
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FINDINGS = 1;
 
@@ -167,9 +170,23 @@ public final class CogniumCli {
         return validated == null ? DEFAULT_PATH : validated;
     }
 
+    /**
+     * Returns the {@code --format} value: {@link #DEFAULT_FORMAT} when empty, otherwise one of {@link
+     * #SUPPORTED_FORMATS} (matched case-insensitively, returned in lower case).
+     *
+     * @throws IllegalArgumentException for any other value
+     */
     static String defaultedFormat(String format) {
         String trimmed = Util.fixEmptyAndTrim(format);
-        return trimmed == null ? DEFAULT_FORMAT : trimmed;
+        if (trimmed == null) {
+            return DEFAULT_FORMAT;
+        }
+        String normalized = trimmed.toLowerCase(Locale.ROOT);
+        if (!SUPPORTED_FORMATS.contains(normalized)) {
+            throw new IllegalArgumentException("Invalid Cognium format '" + trimmed + "': use one of "
+                    + String.join(", ", SUPPORTED_FORMATS) + ".");
+        }
+        return normalized;
     }
 
     static String defaultedPackageVersion(String packageVersion) {

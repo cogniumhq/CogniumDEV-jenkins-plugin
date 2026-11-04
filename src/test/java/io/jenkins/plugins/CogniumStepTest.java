@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import hudson.model.Result;
@@ -70,6 +71,33 @@ class CogniumStepTest {
         FormValidation validation = descriptor.doCheckPackageVersion("1.0.0; rm -rf /");
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
         assertEquals(FormValidation.Kind.OK, descriptor.doCheckPackageVersion("latest").kind);
+    }
+
+    @Test
+    void formatSetterRejectsUnsupportedValues() {
+        CogniumStep step = new CogniumStep();
+        step.setFormat("sarif");
+        assertEquals("sarif", step.getFormat());
+        IllegalArgumentException error =
+                assertThrows(IllegalArgumentException.class, () -> step.setFormat("json --config evil.json"));
+        assertTrue(error.getMessage().contains("Invalid Cognium format"), error.getMessage());
+        assertEquals("sarif", step.getFormat());
+    }
+
+    @Test
+    void descriptorRejectsUnsupportedFormat() {
+        CogniumStep.DescriptorImpl descriptor = j.jenkins.getDescriptorByType(CogniumStep.DescriptorImpl.class);
+        assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckFormat("text; rm").kind);
+        assertEquals(FormValidation.Kind.OK, descriptor.doCheckFormat("json").kind);
+        assertEquals(FormValidation.Kind.OK, descriptor.doCheckFormat("").kind);
+    }
+
+    @Test
+    void pipelineWithUnsupportedFormatFails() throws Exception {
+        WorkflowRun run = runPipeline(true, false, null, "cognium(format: 'xml')");
+        j.assertBuildStatus(Result.FAILURE, run);
+        j.assertLogContains("Invalid Cognium format 'xml'", run);
+        j.assertLogNotContains("[fake-cognium-dev]", run);
     }
 
     @Test
