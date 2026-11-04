@@ -1,3 +1,5 @@
 <div>
-    Path passed to <code>cognium-dev scan</code>. Defaults to <code>.</code> (the Jenkins workspace).
+    Path passed to <code>cognium-dev scan</code>, relative to the workspace. Defaults to <code>.</code> (the Jenkins
+    workspace). Absolute paths, <code>..</code>, values starting with <code>-</code>, the characters
+    <code>" &amp; | &lt; &gt; ^ % ! `</code> and symbolic links that lead out of the workspace are rejected.
 </div>

@@ -45,6 +45,8 @@ public final class CogniumCli {
     private static final Pattern NODE_VERSION = Pattern.compile("^v?(\\d+)\\.(\\d+)\\.(\\d+)(?:[-+].*)?$");
 
     private static final Pattern SAFE_NPM_VERSION = Pattern.compile("^[A-Za-z0-9][A-Za-z0-9._+-]*$");
+    private static final String CMD_METACHARACTERS = "\"&|<>^%!`";
+
     private static final Pattern SAFE_CLI_VALUE = Pattern.compile("^[A-Za-z0-9._,+-]+$");
 
     private CogniumCli() {}
@@ -137,6 +139,15 @@ public final class CogniumCli {
             if (Character.isISOControl(trimmed.charAt(i))) {
                 throw new IllegalArgumentException(
                         "Invalid Cognium " + fieldName + ": control characters are not allowed.");
+            }
+        }
+
+        // Reject characters cmd.exe interprets. On Windows the path and output are arguments to
+        // cognium-dev.cmd, which runs through cmd.exe even though the plugin does not wrap it.
+        for (int i = 0; i < trimmed.length(); i++) {
+            if (CMD_METACHARACTERS.indexOf(trimmed.charAt(i)) >= 0) {
+                throw new IllegalArgumentException("Invalid Cognium " + fieldName + ": '" + trimmed.charAt(i)
+                        + "' is not allowed (one of " + CMD_METACHARACTERS + ").");
             }
         }
 

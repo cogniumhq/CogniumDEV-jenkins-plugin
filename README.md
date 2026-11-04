@@ -53,15 +53,24 @@ cognium(
 
 | Parameter        | Default  | Description                                                                                                                                                  |
 | ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `path`           | `.`      | Path passed to `cognium-dev scan` (relative to the workspace).                                                                                               |
+| `path`           | `.`      | Path passed to `cognium-dev scan`, relative to the workspace. See [Workspace confinement](#workspace-confinement).                                            |
 | `packageVersion` | `latest` | npm version or dist-tag of `cognium-dev`. `latest` always installs the current npm release. Pin a version (for example `4.14.2`) for a reproducible scanner. |
 | `format`         | `text`   | `--format` (`text`, `json`, or `sarif`).                                                                                                                     |
-| `output`         | unset    | Optional `--output` report path.                                                                                                                             |
+| `output`         | unset    | Optional `--output` report path, relative to the workspace. See [Workspace confinement](#workspace-confinement).                                             |
 | `severity`       | unset    | Optional `--severity` filter (for example `high` or `critical,high`).                                                                                        |
 | `category`       | unset    | Optional `--category` filter (for example `security`).                                                                                                       |
 | `failOnFindings` | `false`  | When `true`, security findings fail the step.                                                                                                                |
 
 All parameters are optional. The Pipeline function name is `cognium`.
+
+### Workspace confinement
+
+`path` and `output` must stay inside the job workspace. The step fails, before anything is installed, when either:
+
+- is absolute (`/etc`, `C:\x`, `\\server\share`) or contains a `..` segment;
+- starts with `-` (it would be read as a CLI option);
+- contains `:`, a control character or one of `" & | < > ^ % ! `` ` `` (on Windows these are arguments to `cognium-dev.cmd`, which runs through `cmd.exe`);
+- resolves, on the agent, through a symbolic link that points outside the workspace, or through a dangling symbolic link.
 
 ## Build result behavior
 

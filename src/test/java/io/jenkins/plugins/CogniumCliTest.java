@@ -155,4 +155,36 @@ class CogniumCliTest {
 
         assertThrows(IllegalArgumentException.class, () -> CogniumCli.optionalOutput("-output"));
     }
+
+    @Test
+    void rejectsUnixAbsoluteAndTraversalPaths() {
+        for (String bad : List.of("/etc", "/var/lib/jenkins/workspace/other", "..", "../other-job", "src/../../x")) {
+            assertThrows(IllegalArgumentException.class, () -> CogniumCli.defaultedPath(bad), bad);
+            assertThrows(IllegalArgumentException.class, () -> CogniumCli.optionalOutput(bad), bad);
+        }
+    }
+
+    @Test
+    void rejectsOptionLikePathsAndOutputs() {
+        for (String bad : List.of("-", "--config=evil.json", "-o")) {
+            assertThrows(IllegalArgumentException.class, () -> CogniumCli.defaultedPath(bad), bad);
+            assertThrows(IllegalArgumentException.class, () -> CogniumCli.optionalOutput(bad), bad);
+        }
+    }
+
+    @Test
+    void rejectsCmdMetacharactersInPathsAndOutputs() {
+        for (String bad : List.of("src&calc", "src|x", "a>b", "a<b", "a^b", "%PATH%", "a!b", "a\"b", "a`b")) {
+            assertThrows(IllegalArgumentException.class, () -> CogniumCli.defaultedPath(bad), bad);
+            assertThrows(IllegalArgumentException.class, () -> CogniumCli.optionalOutput(bad), bad);
+        }
+    }
+
+    @Test
+    void acceptsRelativePathsInsideTheWorkspace() {
+        assertEquals("src/main", CogniumCli.defaultedPath("src/main"));
+        assertEquals("my dir/app", CogniumCli.defaultedPath("my dir/app"));
+        assertEquals("reports/out.sarif", CogniumCli.optionalOutput("reports/out.sarif"));
+        assertEquals("a..b", CogniumCli.defaultedPath("a..b"));
+    }
 }

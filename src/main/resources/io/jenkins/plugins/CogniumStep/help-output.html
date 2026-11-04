@@ -1,4 +1,5 @@
 <div>
-    Optional path passed as <code>--output</code> for writing the scan report. Relative paths are resolved from the
-    workspace.
+    Optional path passed as <code>--output</code> for writing the scan report, relative to the workspace. The same
+    rules as <code>path</code> apply: the report can only be written inside the workspace, and a symbolic link
+    (including a dangling one) that leads out of it is rejected.
 </div>

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import hudson.model.Result;
 import hudson.model.queue.QueueTaskFuture;
@@ -70,6 +71,44 @@ class CogniumStepTest {
         FormValidation validation = descriptor.doCheckPackageVersion("1.0.0; rm -rf /");
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
         assertEquals(FormValidation.Kind.OK, descriptor.doCheckPackageVersion("latest").kind);
+    }
+
+    @Test
+    void pipelineRejectsTraversalOutOfTheWorkspace() throws Exception {
+        WorkflowRun run = runPipeline(true, false, null, "cognium(path: '../other-job')");
+        j.assertBuildStatus(Result.FAILURE, run);
+        j.assertLogContains("'..' traversal is not allowed", run);
+        j.assertLogNotContains("[fake-npm]", run);
+    }
+
+    @Test
+    void pipelineRejectsAbsoluteReportOutput() throws Exception {
+        WorkflowRun run = runPipeline(true, false, null, "cognium(output: '/tmp/cognium-report.sarif')");
+        j.assertBuildStatus(Result.FAILURE, run);
+        j.assertLogContains("absolute paths are not allowed", run);
+        j.assertLogNotContains("[fake-npm]", run);
+    }
+
+    @Test
+    void pipelineRejectsSymlinkThatEscapesTheWorkspace() throws Exception {
+        assumeFalse(FakeCogniumEnvironment.isWindowsAgent(), "uses ln -s");
+        WorkflowRun run = runPipeline(
+                true, false, null, "sh 'mkdir -p ../cognium-outside && ln -s ../cognium-outside escape'\n"
+                        + "    cognium(path: 'escape')");
+        j.assertBuildStatus(Result.FAILURE, run);
+        j.assertLogContains("symbolic link that leaves the Jenkins workspace", run);
+        j.assertLogNotContains("[fake-npm]", run);
+    }
+
+    @Test
+    void pipelineRejectsReportThroughSymlinkThatEscapesTheWorkspace() throws Exception {
+        assumeFalse(FakeCogniumEnvironment.isWindowsAgent(), "uses ln -s");
+        WorkflowRun run = runPipeline(
+                true, false, null, "sh 'mkdir -p ../cognium-outside && ln -s ../cognium-outside reports'\n"
+                        + "    cognium(output: 'reports/out.sarif')");
+        j.assertBuildStatus(Result.FAILURE, run);
+        j.assertLogContains("symbolic link that leaves the Jenkins workspace", run);
+        j.assertLogNotContains("[fake-npm]", run);
     }
 
     @Test
