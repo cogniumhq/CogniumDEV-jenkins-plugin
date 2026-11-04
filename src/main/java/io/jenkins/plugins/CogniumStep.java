@@ -138,7 +138,12 @@ public class CogniumStep extends Step {
         }
 
         public FormValidation doCheckFormat(@QueryParameter String format) {
-            return validateOptionalToken(format, "format");
+            try {
+                CogniumCli.defaultedFormat(format);
+                return FormValidation.ok();
+            } catch (IllegalArgumentException e) {
+                return FormValidation.error(e.getMessage());
+            }
         }
 
         public FormValidation doCheckSeverity(@QueryParameter String severity) {

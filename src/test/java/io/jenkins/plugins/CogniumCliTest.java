@@ -155,4 +155,21 @@ class CogniumCliTest {
 
         assertThrows(IllegalArgumentException.class, () -> CogniumCli.optionalOutput("-output"));
     }
+
+    @Test
+    void acceptsSupportedFormats() {
+        assertEquals("text", CogniumCli.defaultedFormat("text"));
+        assertEquals("json", CogniumCli.defaultedFormat(" json "));
+        assertEquals("sarif", CogniumCli.defaultedFormat("SARIF"));
+        assertEquals("text", CogniumCli.defaultedFormat(""));
+    }
+
+    @Test
+    void rejectsUnsupportedFormats() {
+        for (String bad : List.of("text; rm", "json --config", "--output", "xml", "html", "text,json", "sarif x")) {
+            IllegalArgumentException error =
+                    assertThrows(IllegalArgumentException.class, () -> CogniumCli.defaultedFormat(bad), bad);
+            assertTrue(error.getMessage().contains("text, json, sarif"), error.getMessage());
+        }
+    }
 }
