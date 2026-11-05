@@ -79,6 +79,7 @@ public final class CogniumCli {
         command.add("--prefix");
         command.add(installDirRemote);
         command.add("--no-save");
+        command.add("--ignore-scripts");
         command.add(PACKAGE_NAME + "@" + requireSafeNpmVersion(packageVersion));
         return command;
     }

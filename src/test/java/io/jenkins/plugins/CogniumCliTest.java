@@ -29,7 +29,9 @@ class CogniumCliTest {
     @Test
     void installCommandUsesPrefixAndDoesNotSaveGlobally() {
         List<String> command = CogniumCli.installCommand(true, "/tmp/c", "latest");
-        assertEquals(List.of("npm", "install", "--prefix", "/tmp/c", "--no-save", "cognium-dev@latest"), command);
+        assertEquals(
+                List.of("npm", "install", "--prefix", "/tmp/c", "--no-save", "--ignore-scripts", "cognium-dev@latest"),
+                command);
     }
 
     @Test

@@ -17,6 +17,7 @@ pipeline {
             steps {
                 cognium(
                     path: '.',
+                    packageVersion: '4.14.2',
                     format: 'text',
                     failOnFindings: false
                 )
@@ -33,6 +34,7 @@ By default, security findings are logged and the build continues. To fail the st
 ```groovy
 cognium(
     path: '.',
+    packageVersion: '4.14.2',
     failOnFindings: true
 )
 ```
@@ -48,6 +50,8 @@ cognium(
     failOnFindings: true
 )
 ```
+
+> **Package version:** Pin `packageVersion` to a specific Cognium release for reproducible builds. The default is `latest`, which installs the current npm release on every build and may change between builds.
 
 ## Parameters
 
@@ -79,10 +83,10 @@ This matches the Cognium Buildkite plugin: findings do not fail the job unless y
 
 ## Requirements
 
-- Jenkins 2.528.3 or newer (plugin baseline 2.528). Official Jenkins runtimes for this line are Java 17 or 21. The plugin does **not** require Java 25.
-- A Jenkins agent with Node.js and npm on `PATH`.
-- Node.js **>= 20.19.0**, which is what current `cognium-dev` releases need.
-- Network access from the agent to the npm registry at scan time (the plugin installs `cognium-dev` into a temporary directory).
+* Jenkins 2.528.3 or newer (plugin baseline 2.528). Official Jenkins runtimes for this line are Java 17 or 21. The plugin does **not** require Java 25.
+* A Jenkins agent with Node.js and npm on `PATH`.
+* Node.js **>= 20.19.0**, which is what current `cognium-dev` releases need.
+* Network access from the agent to the npm registry at scan time (the plugin installs `cognium-dev` into a temporary directory).
 
 The plugin does not use Jenkins credentials. Source is scanned on the agent; this plugin does not send code to Cognium.
 
@@ -90,7 +94,7 @@ The plugin does not use Jenkins credentials. Source is scanned on the agent; thi
 
 1. The `cognium` step runs on the agent that owns the workspace.
 2. It checks that Node.js is on `PATH`.
-3. It installs `cognium-dev@<packageVersion>` into a temporary directory with `npm install --prefix` (not a global install). The default tag is `latest`.
+3. It installs `cognium-dev@<packageVersion>` into a temporary directory with `npm install --prefix` and `--ignore-scripts` (not a global install). The default tag is `latest`.
 4. It runs `cognium-dev scan <path> --format ...` from that install (Windows uses `npm.cmd` / `cognium-dev.cmd`).
 5. It deletes the temporary directory even when the scan fails.
 
@@ -123,9 +127,9 @@ Covered behavior includes descriptor registration, defaults, Pipeline invocation
 
 This plugin is not in the Jenkins update center yet. Hosting follows the Jenkins documentation:
 
-- [Request hosting](https://www.jenkins.io/doc/developer/publishing/requesting-hosting/)
-- Plugin ID / `artifactId`: `cognium`
-- After adoption the GitHub repository is typically `jenkinsci/cognium-plugin`
+* [Request hosting](https://www.jenkins.io/doc/developer/publishing/requesting-hosting/)
+* Plugin ID / `artifactId`: `cognium`
+* After adoption the GitHub repository is typically `jenkinsci/cognium-plugin`
 
 Until then, keep `<gitHubRepo>` in `pom.xml` pointed at the current repository. Do not set it to `jenkinsci/...` until the Jenkins project actually hosts it.
 
