@@ -155,4 +155,22 @@ class CogniumCliTest {
 
         assertThrows(IllegalArgumentException.class, () -> CogniumCli.optionalOutput("-output"));
     }
+
+    @Test
+    void formatAcceptsSafeValuesAndRejectsUnsafeValues() {
+        assertEquals("text", CogniumCli.defaultedFormat("text"));
+        assertEquals("json", CogniumCli.defaultedFormat("json"));
+        assertEquals("sarif", CogniumCli.defaultedFormat("sarif"));
+
+        assertThrows(IllegalArgumentException.class, () -> CogniumCli.defaultedFormat("text; rm"));
+
+        assertThrows(IllegalArgumentException.class, () -> CogniumCli.defaultedFormat("json --config"));
+    }
+
+    @Test
+    void formatDefaultsToTextWhenEmpty() {
+        assertEquals("text", CogniumCli.defaultedFormat(null));
+        assertEquals("text", CogniumCli.defaultedFormat(""));
+        assertEquals("text", CogniumCli.defaultedFormat("   "));
+    }
 }

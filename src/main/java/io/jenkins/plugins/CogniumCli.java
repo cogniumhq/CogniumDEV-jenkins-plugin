@@ -168,8 +168,13 @@ public final class CogniumCli {
     }
 
     static String defaultedFormat(String format) {
-        String trimmed = Util.fixEmptyAndTrim(format);
-        return trimmed == null ? DEFAULT_FORMAT : trimmed;
+        String value = Util.fixEmptyAndTrim(format);
+
+        if (value == null) {
+            return DEFAULT_FORMAT;
+        }
+
+        return optionalCliValue(value, "format");
     }
 
     static String defaultedPackageVersion(String packageVersion) {
