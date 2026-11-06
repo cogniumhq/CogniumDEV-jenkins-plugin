@@ -3,8 +3,12 @@ effective-pom.xml
 
 # mvn hpi:run
 work
-.hpi
+
+# Build output. The plugin jar and .hpi are built from src/ by `mvn verify`
+# (target/cognium.hpi, target/cognium.jar); never commit them.
+*.hpi
 *.jpi
+/WEB-INF/
 # IntelliJ IDEA project files
 *.iml
 *.iws
