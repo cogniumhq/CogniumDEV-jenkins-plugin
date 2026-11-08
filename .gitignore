@@ -1,21 +1,25 @@
-target
+# Jenkins build output
+target/
 effective-pom.xml
-
-# mvn hpi:run
-work
-.hpi
+work/
+*.hpi
 *.jpi
+
 # IntelliJ IDEA project files
 *.iml
 *.iws
 *.ipr
-.idea
+.idea/
 
 # Eclipse project files
-.settings
+.settings/
 .classpath
 .project
+
+# Operating system files
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Logs
 *.log
