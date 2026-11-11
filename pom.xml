@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>6.2138.v03274d462c13</version>
+    <version>6.2236.v12dd4c483242</version>
     <relativePath />
   </parent>
 
@@ -17,7 +17,7 @@
 
   <name>Cognium SAST</name>
   <description>Jenkins Pipeline step that installs cognium-dev locally on the agent and runs Cognium SAST scans.</description>
-  <url>https://github.com/cogniumhq/CogniumDEV-jenkins-plugin</url>
+  <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
   <inceptionYear>2026</inceptionYear>
 
   <organization>
@@ -33,15 +33,6 @@
     </license>
   </licenses>
 
-  <developers>
-    <developer>
-      <id>cognium</id>
-      <name>Cognium</name>
-      <organization>Cognium</organization>
-      <organizationUrl>https://cognium.dev</organizationUrl>
-    </developer>
-  </developers>
-
   <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
     <connection>scm:git:https://github.com/${gitHubRepo}</connection>
     <developerConnection>scm:git:https://github.com/${gitHubRepo}</developerConnection>
@@ -56,16 +47,18 @@
 
   <properties>
     <revision>1.0</revision>
-    <changelist>-SNAPSHOT</changelist>
+    <changelist>999999-SNAPSHOT</changelist>
 
-    <jenkins.baseline>2.528</jenkins.baseline>
-    <jenkins.version>${jenkins.baseline}.3</jenkins.version>
+    <jenkins.baseline>2.555.3</jenkins.baseline>
+    <jenkins.version>${jenkins.baseline}</jenkins.version>
 
     <gitHubRepo>cogniumhq/CogniumDEV-jenkins-plugin</gitHubRepo>
 
     <spotless.check.skip>false</spotless.check.skip>
     <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
     <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
+    <banObsoleteDependencyOverrides.skip>false</banObsoleteDependencyOverrides.skip>
+    <ban-deprecated-stapler.skip>false</ban-deprecated-stapler.skip>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
   </properties>
 
@@ -73,8 +66,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>6237.v4da_61a_4a_19e5</version>
+        <artifactId>bom-2.555.x</artifactId>
+        <version>6931.vea_a_b_c6fd017d</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
