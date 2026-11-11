@@ -51,6 +51,7 @@
 
     <jenkins.baseline>2.555.3</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}</jenkins.version>
+    <jenkins.bom.version>6931.vea_a_b_c6fd017d</jenkins.bom.version>
 
     <gitHubRepo>cogniumhq/CogniumDEV-jenkins-plugin</gitHubRepo>
 
