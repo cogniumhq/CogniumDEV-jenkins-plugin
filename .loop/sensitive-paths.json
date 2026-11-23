@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "tierA": [
+    ".github/workflows/cd.yaml",
+    "jenkinsprefinal.zip"
+  ]
+}
